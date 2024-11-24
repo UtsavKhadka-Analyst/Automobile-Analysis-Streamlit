@@ -11,7 +11,7 @@ st.title("Comprehensive Data Cleaning, Preprocessing, and Analysis")
 
 # Load the dataset
 st.header("Step 1: Load the Dataset")
-filename = "https://raw.githubusercontent.com/klamsal/Fall2024Exam/refs/heads/main/auto.csv"
+filename = "https://raw.githubusercontent.com/ncit17153/Exam1_streamlit/refs/heads/main/Exam1_clean_df.csv"
 headers = [
     "symboling", "normalized-losses", "make", "fuel-type", "aspiration",
     "num-of-doors", "body-style", "drive-wheels", "engine-location",
