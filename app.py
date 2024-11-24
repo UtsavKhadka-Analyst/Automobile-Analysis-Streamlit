@@ -19,14 +19,21 @@ headers = [
     "num-of-cylinders", "engine-size", "fuel-system", "bore", "stroke",
     "compression-ratio", "horsepower", "peak-rpm", "city-mpg", "highway-mpg", "price"
 ]
-df = pd.read_csv(filename, names=headers)
 
-st.write("Raw dataset loaded:")
-st.dataframe(df.head())
+try:
+    df = pd.read_csv(filename, names=headers)
+    st.write("Raw dataset loaded:")
+    st.dataframe(df.head())
+except Exception as e:
+    st.error(f"Error loading dataset: {e}")
+    st.stop()
 
-# Replace '?' with NaN
+# Replace '?' with NaN and ensure numeric columns
 st.header("Step 2: Handle Missing Values")
 df.replace("?", np.nan, inplace=True)
+numeric_cols = ["normalized-losses", "bore", "stroke", "horsepower", "peak-rpm", "city-mpg", "highway-mpg", "price"]
+for col in numeric_cols:
+    df[col] = pd.to_numeric(df[col], errors="coerce")
 
 # Count missing values
 st.write("Missing values in each column:")
@@ -35,12 +42,12 @@ st.write(missing_data)
 
 # Fill missing values
 st.write("Replacing missing values:")
-df["normalized-losses"].replace(np.nan, df["normalized-losses"].astype("float").mean(), inplace=True)
-df["bore"].replace(np.nan, df["bore"].astype("float").mean(), inplace=True)
-df["stroke"].replace(np.nan, df["stroke"].astype("float").mean(), inplace=True)
-df["horsepower"].replace(np.nan, df["horsepower"].astype("float").mean(), inplace=True)
-df["peak-rpm"].replace(np.nan, df["peak-rpm"].astype("float").mean(), inplace=True)
-df["num-of-doors"].replace(np.nan, "four", inplace=True)
+df["normalized-losses"].fillna(df["normalized-losses"].mean(), inplace=True)
+df["bore"].fillna(df["bore"].mean(), inplace=True)
+df["stroke"].fillna(df["stroke"].mean(), inplace=True)
+df["horsepower"].fillna(df["horsepower"].mean(), inplace=True)
+df["peak-rpm"].fillna(df["peak-rpm"].mean(), inplace=True)
+df["num-of-doors"].fillna("four", inplace=True)
 df.dropna(subset=["price"], inplace=True)
 df.reset_index(drop=True, inplace=True)
 
@@ -66,9 +73,9 @@ st.dataframe(df[["length", "width", "height"]].head())
 
 # Binning
 st.header("Step 5: Binning Horsepower")
-bins = np.linspace(min(df["horsepower"].astype(int)), max(df["horsepower"].astype(int)), 4)
+bins = np.linspace(min(df["horsepower"]), max(df["horsepower"]), 4)
 group_names = ["Low", "Medium", "High"]
-df["horsepower-binned"] = pd.cut(df["horsepower"].astype(int), bins, labels=group_names, include_lowest=True)
+df["horsepower-binned"] = pd.cut(df["horsepower"], bins, labels=group_names, include_lowest=True)
 
 st.write("Horsepower binned:")
 st.bar_chart(df["horsepower-binned"].value_counts())
@@ -94,7 +101,12 @@ st.download_button(
 # Load cleaned dataset for analysis
 st.header("Step 7: Analysis")
 analysis_url = 'https://raw.githubusercontent.com/klamsal/Fall2024Exam/refs/heads/main/CleanedAutomobile.csv'
-df_analysis = pd.read_csv(analysis_url)
+
+try:
+    df_analysis = pd.read_csv(analysis_url)
+except Exception as e:
+    st.error(f"Error loading analysis dataset: {e}")
+    st.stop()
 
 # Correlation analysis
 st.subheader("Correlation Analysis")
@@ -104,34 +116,46 @@ st.dataframe(correlation_matrix)
 
 # Scatter plots
 st.subheader("Scatter Plots")
-fig1, ax1 = plt.subplots()
-sns.regplot(x="engine-size", y="price", data=df_analysis, ax=ax1)
-plt.title("Engine Size vs. Price")
-st.pyplot(fig1)
+try:
+    fig1, ax1 = plt.subplots()
+    sns.regplot(x="engine-size", y="price", data=df_analysis, ax=ax1)
+    plt.title("Engine Size vs. Price")
+    st.pyplot(fig1)
 
-fig2, ax2 = plt.subplots()
-sns.regplot(x="highway-mpg", y="price", data=df_analysis, ax=ax2)
-plt.title("Highway MPG vs. Price")
-st.pyplot(fig2)
+    fig2, ax2 = plt.subplots()
+    sns.regplot(x="highway-mpg", y="price", data=df_analysis, ax=ax2)
+    plt.title("Highway MPG vs. Price")
+    st.pyplot(fig2)
+except Exception as e:
+    st.error(f"Error generating scatter plots: {e}")
 
 # Box plot
 st.subheader("Box Plot: Body Style vs. Price")
-fig3, ax3 = plt.subplots()
-sns.boxplot(x="body-style", y="price", data=df_analysis, palette="Set2", ax=ax3)
-plt.xticks(rotation=45)
-st.pyplot(fig3)
+try:
+    fig3, ax3 = plt.subplots()
+    sns.boxplot(x="body-style", y="price", data=df_analysis, palette="Set2", ax=ax3)
+    plt.xticks(rotation=45)
+    st.pyplot(fig3)
+except Exception as e:
+    st.error(f"Error generating box plot: {e}")
 
 # Heatmap
 st.subheader("Heatmap: Drive Wheels and Body Style vs. Price")
-grouped_data = df_analysis.groupby(['drive-wheels', 'body-style'])['price'].mean().reset_index()
-pivot_table = grouped_data.pivot(index='drive-wheels', columns='body-style', values='price').fillna(0)
+try:
+    grouped_data = df_analysis.groupby(['drive-wheels', 'body-style'])['price'].mean().reset_index()
+    pivot_table = grouped_data.pivot(index='drive-wheels', columns='body-style', values='price').fillna(0)
 
-fig4, ax4 = plt.subplots(figsize=(10, 6))
-sns.heatmap(pivot_table, annot=True, fmt=".0f", cmap='RdBu', linewidths=.5, ax=ax4)
-plt.title("Heatmap: Drive Wheels & Body Style vs. Price")
-st.pyplot(fig4)
+    fig4, ax4 = plt.subplots(figsize=(10, 6))
+    sns.heatmap(pivot_table, annot=True, fmt=".0f", cmap='RdBu', linewidths=.5, ax=ax4)
+    plt.title("Heatmap: Drive Wheels & Body Style vs. Price")
+    st.pyplot(fig4)
+except Exception as e:
+    st.error(f"Error generating heatmap: {e}")
 
 # Pearson correlation
 st.subheader("Pearson Correlation")
-pearson_coef, p_value = stats.pearsonr(df_analysis['engine-size'], df_analysis['price'])
-st.write(f"Pearson Correlation (Engine Size vs. Price): {pearson_coef:.2f}, P-value: {p_value:.2e}")
+try:
+    pearson_coef, p_value = stats.pearsonr(df_analysis['engine-size'], df_analysis['price'])
+    st.write(f"Pearson Correlation (Engine Size vs. Price): {pearson_coef:.2f}, P-value: {p_value:.2e}")
+except Exception as e:
+    st.error(f"Error calculating Pearson correlation: {e}")
