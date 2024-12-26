@@ -10,6 +10,10 @@ The primary objectives of this project include:
 - Develop interactive visualizations for dynamic data exploration.
 - Provide actionable insights to help automobile businesses make data-driven decisions.
 
+## **Live Demo**
+Explore the live interactive app here:  
+👉 [Automobile Sale Analysis App](https://automobile-sale-analysis.streamlit.app/)
+
 ## **Methodology/Approach**
 1. **Data Collection & Preparation**:
    - Imported the automobile sales dataset in CSV format.
